@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Кіру · TaskFlow{% endblock %}
+{% block auth %}
+<div class="auth-form">
+  <p class="eyebrow">ЖЕКЕ КАБИНЕТ</p>
+  <h2>Жүйеге кіру</h2>
+  <p class="muted">Жұмыс кеңістігіне өту үшін логин мен пароліңді енгіз.</p>
+  <form method="post">{% csrf_token %}
+    {% if form.non_field_errors %}<div class="notice error">{{ form.non_field_errors }}</div>{% endif %}
+    {% for field in form %}<p><label for="{{ field.id_for_label }}">{% if field.name == "username" %}Логин{% else %}Пароль{% endif %}</label>{{ field }}{{ field.errors }}</p>{% endfor %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <button class="button primary wide">Кіру <span aria-hidden="true">→</span></button>
+  </form>
+  <p class="muted">Аккаунтың жоқ па? <a href="{% url 'signup' %}">Тіркелу</a></p>
+</div>
+{% endblock %}

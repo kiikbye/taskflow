@@ -1,0 +1,50 @@
+{% load static %}
+<!doctype html>
+<html lang="kk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}TaskFlow · Тапсырмалар орталығы{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'taskflow.css' %}">
+  {% block scripts %}{% endblock %}
+</head>
+<body>
+{% if user.is_authenticated %}
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" href="{% url 'dashboard' %}"><span class="logo">TF</span><span>TaskFlow<small>ТАРАТЫЛҒАН ЖҮЙЕ</small></span></a>
+    <nav aria-label="Негізгі мәзір">
+      <span class="nav-title">ЖҰМЫС КЕҢІСТІГІ</span>
+      <a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}aria-current="page"{% endif %}><span aria-hidden="true">▦</span> Тапсырмалар</a>
+      <a href="{% url 'profile' %}" {% if request.resolver_match.url_name == 'profile' %}aria-current="page"{% endif %}><span aria-hidden="true">◉</span> Профиль және сеанс</a>
+      {% if user.is_staff %}<a href="{% url 'admin:index' %}"><span aria-hidden="true">◇</span> Әкімші панелі</a>{% endif %}
+      <a href="{% url 'batch-list' %}"><span aria-hidden="true">⌘</span> REST API</a>
+    </nav>
+    <div class="sidebar-end">
+      <div class="identity"><span class="avatar">{{ user.username|slice:":1"|upper }}</span><div><strong>{{ user.username }}</strong><small>{{ user.role }}</small></div></div>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="exit">Шығу <span aria-hidden="true">↗</span></button></form>
+    </div>
+  </aside>
+  <main class="workspace">
+    <div class="topbar"><span>Зертхана / <strong>{% block breadcrumb %}Тапсырмалар{% endblock %}</strong></span><span class="lab">№10 ЗЕРТХАНА</span></div>
+    {% if messages %}<div class="notices" role="status">{% for message in messages %}<p class="notice {{ message.tags }}">{{ message }}</p>{% endfor %}</div>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% else %}
+<div class="auth-shell">
+  <section class="auth-intro">
+    <div class="brand"><span class="logo">TF</span><span>TaskFlow<small>ТАРАТЫЛҒАН ЖҮЙЕ</small></span></div>
+    <div>
+      <p class="eyebrow">ДИПЛОМДЫҚ ЖОБА · №10 ЗЕРТХАНА</p>
+      <h1>Тапсырмаларды қатар өңдеу</h1>
+      <p>Кезекке қойылған есептерді бірнеше worker орындайды. Панельден әр тапсырманың күйін, уақытын және қайта өңделуін бақыла.</p>
+      <div class="stack"><span>PostgreSQL</span><span>RabbitMQ</span><span>Celery</span><span>Redis</span></div>
+    </div>
+    <p class="auth-foot">Ақауға төзімді тапсырма өңдеу жүйесі</p>
+  </section>
+  <main class="auth-main">{% block auth %}{% endblock %}</main>
+</div>
+{% endif %}
+</body>
+</html>

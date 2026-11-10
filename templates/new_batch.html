@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block breadcrumb %}Жаңа топтама{% endblock %}
+{% block content %}
+<header class="page-header"><div><p class="eyebrow">ТАПСЫРМАЛАР КЕЗЕГІ</p><h1>Жаңа топтама</h1><p class="muted">Есепті бірнеше тәуелсіз бөлікке бөліп, өңдеу режимін таңда.</p></div></header>
+<section class="card pad form-page">{% include 'batch_form.html' %}<a class="back" href="{% url 'dashboard' %}">← Панельге оралу</a></section>
+{% endblock %}

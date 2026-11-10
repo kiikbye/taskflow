@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block breadcrumb %}Профиль{% endblock %}
+{% block content %}
+<header class="page-header"><div><p class="eyebrow">АУТЕНТИФИКАЦИЯ</p><h1>Профиль және сеанс</h1><p class="muted">Сеанс Redis-те сақталады. Браузерде HttpOnly сеанс cookie-і бар.</p></div></header>
+<div class="dashboard-grid">
+  <section class="card pad">
+    <h2>{{ user.username }}</h2>
+    <dl class="profile-details">
+      <dt>Рөл</dt><dd>{{ user.role }}</dd>
+      <dt>Email</dt><dd>{{ user.email|default:"—" }}</dd>
+      <dt>Телефон</dt><dd>{{ user.phone|default:"—" }}</dd>
+      <dt>Профильді ашу саны</dt><dd>{{ visits }}</dd>
+      <dt>Сеанс мерзімі</dt><dd>{{ expires|date:"d.m.Y H:i:s" }}</dd>
+    </dl>
+    <form method="post" action="{% url 'logout_everywhere' %}">{% csrf_token %}<button class="button primary">Барлық браузердегі сеанстардан шығу</button></form>
+  </section>
+  <section class="card pad"><h2>Рұқсаттар</h2><ul class="permission-list">{% for permission in permissions %}<li><code>{{ permission }}</code></li>{% empty %}<li>Рұқсат тағайындалмаған.</li>{% endfor %}</ul></section>
+</div>
+{% endblock %}

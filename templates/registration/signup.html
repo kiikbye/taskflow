@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Тіркелу · TaskFlow{% endblock %}
+{% block auth %}
+<div class="auth-form">
+  <p class="eyebrow">ЖАҢА АККАУНТ</p>
+  <h2>Тіркелу</h2>
+  <p class="muted">Тіркелгенде student рөлі беріледі. Бұл рөл жарияланған нәтижелерді көре алады.</p>
+  <form method="post">{% csrf_token %}{{ form.as_p }}<button class="button primary wide">Аккаунт ашу</button></form>
+  <p class="muted">Аккаунтың бар ма? <a href="{% url 'login' %}">Кіру</a></p>
+</div>
+{% endblock %}

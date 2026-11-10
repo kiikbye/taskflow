@@ -1,0 +1,87 @@
+﻿name: taskflow
+x-app: &app
+  image: taskflow-app:local
+  build: .
+  restart: unless-stopped
+  environment:
+    DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Create .env from .env.example}
+    DB_HOST: db
+    DB_NAME: taskflow
+    DB_USER: taskflow
+    DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
+    REDIS_URL: redis://redis:6379/1
+    CELERY_BROKER_URL: amqp://taskflow:${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD}@rabbitmq:5672//
+  depends_on:
+    db: {condition: service_healthy}
+    rabbitmq: {condition: service_healthy}
+    redis: {condition: service_healthy}
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: taskflow
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
+      POSTGRES_DB: taskflow
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "taskflow", "-d", "taskflow"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  rabbitmq:
+    image: rabbitmq:4.2-management
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: taskflow
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD}
+    ports: ["127.0.0.1:15672:15672"]
+    volumes: [rabbit_data:/var/lib/rabbitmq]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 5s
+      timeout: 10s
+      retries: 18
+  redis:
+    image: redis:7.4
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redis_data:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  web:
+    <<: *app
+    command: >
+      sh -c 'python manage.py migrate --noinput &&
+      python manage.py setup_roles &&
+      python manage.py collectstatic --noinput &&
+      exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --worker-class gthread --threads 4 --access-logfile -'
+    ports: ["127.0.0.1:8000:8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/login/', timeout=3)"]
+      interval: 4s
+      timeout: 5s
+      retries: 20
+  dispatcher:
+    <<: *app
+    command: ["python", "manage.py", "dispatch_tasks"]
+    depends_on:
+      web: {condition: service_healthy}
+  worker:
+    <<: *app
+    command: ["celery", "-A", "config", "worker", "-l", "INFO", "-Q", "parallel", "-c", "1", "-n", "parallel@%h"]
+    depends_on:
+      web: {condition: service_healthy}
+  serial:
+    <<: *app
+    command: ["celery", "-A", "config", "worker", "-l", "INFO", "-Q", "serial", "-c", "1", "-n", "serial@%h"]
+    depends_on:
+      web: {condition: service_healthy}
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbit_data:
+

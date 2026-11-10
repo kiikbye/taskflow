@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+{% block scripts %}<script src="{% static 'taskflow.js' %}" defer></script>{% endblock %}
+{% block content %}
+<header class="page-header">
+  <div><p class="eyebrow">ТАПСЫРМАЛАР КЕЗЕГІ</p><h1>Өңдеу панелі</h1><p class="muted">Топтаманың орындалуын, worker жүктемесін және қайта өңдеу әрекеттерін бақыла.</p></div>
+  {% if perms.queueing.add_batch %}<a class="button primary" href="#create">+ Жаңа топтама</a>{% endif %}
+</header>
+<section class="pipeline" aria-label="Жүйе компоненттері">
+  <div><span>01</span><b>Django</b><small>Сұранысты қабылдайды</small></div>
+  <div><span>02</span><b>PostgreSQL</b><small>Тапсырма мен нәтиже</small></div>
+  <div><span>03</span><b>RabbitMQ</b><small>Тапсырмалар кезегі</small></div>
+  <div><span>04</span><b>Celery</b><small>Worker-лер орындайды</small></div>
+  <div><span>05</span><b>Redis</b><small>Браузер сеансы</small></div>
+</section>
+<div class="dashboard-grid">
+  <div class="main-col">
+  {% if batch %}
+    <section class="card pad overview" id="live" data-url="{% url 'batch-status' batch.pk %}">
+      <div class="card-head"><div><p class="eyebrow">ТОПТАМА #{{ batch.pk }} · {{ batch.get_mode_display|upper }}</p><h2>{{ batch.title }}</h2></div><span class="pill" id="connection" role="status">Жүктелуде</span></div>
+      <p class="muted small">{{ batch.owner.username }} · {{ batch.created_at|date:"d.m.Y H:i" }}{% if batch.published_at %} · Жарияланды{% endif %}</p>
+      <div class="stats">
+        <div><small>Кезекте</small><strong data-state="queued">—</strong></div>
+        <div><small>Өңделуде</small><strong data-state="running">—</strong></div>
+        <div><small>Дайын</small><strong data-state="done">—</strong></div>
+        <div><small>Сәтсіз</small><strong data-state="failed">—</strong></div>
+      </div>
+      <progress id="progress" aria-label="Аяқталған тапсырмалар" value="0" max="1"></progress>
+      <div class="measurements">
+        <span>Уақыт <b id="elapsed">—</b></span><span>Worker саны <b id="workers">—</b></span>
+        <span>Бір уақытта ең көбі <b id="peak">—</b></span><span>Қайталау <b id="retries">—</b></span>
+        <span>Өнімділік <b id="rate">—</b></span><span>Жалпы қосынды <b id="result">—</b></span>
+      </div>
+      {% if rename or perms.queueing.publish_batch and not batch.published_at %}
+      <div class="batch-actions">
+        {% if rename %}<form method="post" action="{% url 'rename_batch' batch.pk %}">{% csrf_token %}<label class="sr-only" for="{{ rename.title.id_for_label }}">Жаңа атау</label>{{ rename.title }}<button class="button">Атауын өзгерту</button></form>{% endif %}
+        {% if perms.queueing.publish_batch and not batch.published_at %}<form method="post" action="{% url 'publish' batch.pk %}">{% csrf_token %}<button class="button" id="publish" disabled>Нәтижені жариялау</button></form>{% endif %}
+      </div>
+      {% endif %}
+    </section>
+    <section class="card pad">
+      <div class="card-head"><div><h2>Орындалу уақыты</h2><p class="muted small">Уақыт жолақтары қабаттасса, worker-лер тапсырмаларды қатар орындаған.</p></div><span class="pill">СЕКУНД</span></div>
+      <div class="timeline-axis"><span>0 с</span><span id="axis-end">—</span></div>
+      <div id="timeline"><p class="muted">Алғашқы worker күтілуде.</p></div>
+    </section>
+    <section class="card pad">
+      <h2>Тапсырмалар журналы</h2>
+      <div class="table-scroll"><table><thead><tr><th>Бөлік</th><th>Күй</th><th>Әрекет</th><th>Соңғы worker</th><th>Нәтиже</th></tr></thead><tbody id="tasks"></tbody></table></div>
+    </section>
+  {% else %}
+    <section class="card empty"><span class="empty-icon" aria-hidden="true">▦</span><h2>Әзірге топтама жоқ</h2>
+      {% if perms.queueing.add_batch %}<p class="muted">Жаңа топтама жібергенде тапсырмалардың күйі осында көрінеді.</p>{% else %}<p class="muted">Manager нәтижені жариялаған соң, ол осы бетте көрінеді.</p>{% endif %}
+    </section>
+  {% endif %}
+  </div>
+  <aside class="side-col">
+    {% if perms.queueing.add_batch %}
+    <section class="card pad" id="create"><p class="eyebrow">ЖАҢА ЕСЕП</p><h2>Топтама құру</h2><p class="muted small">Әр бөлік 1000 санның квадраттарының қосындысын есептейді. Күту уақыты өңдеу барысын көруге көмектеседі.</p>{% include 'batch_form.html' %}</section>
+    {% endif %}
+    <section class="card pad history"><p class="eyebrow">ТАРИХ</p><h2>Соңғы топтамалар</h2>
+      {% for item in batches %}<a href="?batch={{ item.pk }}" {% if batch.pk == item.pk %}aria-current="true"{% endif %}><span><b>{{ item.title }}</b><small>#{{ item.pk }} · {{ item.get_mode_display }}</small></span><span aria-hidden="true">›</span></a>
+      {% empty %}<p class="muted small">Топтамалар осында сақталады.</p>{% endfor %}
+    </section>
+  </aside>
+</div>
+{% endblock %}
