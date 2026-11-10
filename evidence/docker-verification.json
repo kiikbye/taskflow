@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-10",
+  "environment": "Fresh checkout in Docker Compose",
+  "django_tests_passed": 10,
+  "serial": {
+    "states": {
+      "queued": 0,
+      "running": 0,
+      "done": 9,
+      "failed": 0
+    },
+    "peak": 1,
+    "elapsed": 18.52,
+    "result": 243040501500
+  },
+  "parallel": {
+    "states": {
+      "queued": 0,
+      "running": 0,
+      "done": 9,
+      "failed": 0
+    },
+    "peak": 3,
+    "elapsed": 6.34,
+    "result": 243040501500
+  },
+  "worker_recovery": {
+    "attempts": 2,
+    "completed_by_different_worker": true,
+    "elapsed": 44.49
+  }
+}

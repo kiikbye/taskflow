@@ -24,6 +24,8 @@ Each job computed a sum of squares and included a two-second simulated wait. Bot
 
 The demo exercises worker recovery. Its PostgreSQL, RabbitMQ, and Redis services each run as a single instance.
 
+The demo was also reproduced from a fresh checkout in Docker Compose. All 10 Django tests passed. Both batches produced the same sum, and a different worker finished the interrupted job on its second attempt. [Docker verification results](evidence/docker-verification.json)
+
 ## Run locally on Windows
 
 Start Docker Desktop and open PowerShell in the directory that contains `compose.yaml`.
