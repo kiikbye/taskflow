@@ -53,4 +53,11 @@ Open [TaskFlow on localhost](http://localhost:8000) and sign in as `demo_teacher
 2. Create another batch with the same inputs and **Параллель** (parallel) mode. Compare the timelines and the totals after both batches finish.
 3. To test a retry, check **Бірінші әрекеттегі сынақ қатесі** (inject a failure on the first attempt) before submitting another batch. The timeline shows both the failed attempt and the retry.
 
+### Reproduce worker recovery
+
+1. Start a parallel batch with one job and a 12-second wait. Watch the timeline for the hostname of the worker that claims it.
+2. Run `docker compose ps worker` to list the three worker containers. Use `docker inspect --format '{{.Config.Hostname}}' <container>` to match a container to the hostname in the timeline.
+3. Run `docker kill <container>` while that job is running. Leave the other workers running. After the execution window expires, the timeline should show a second attempt and a result from a different worker.
+4. Run `docker compose up -d --scale worker=3` to restore the worker count.
+
 Run the automated tests with `docker compose exec web python manage.py test -v 2`. To stop the demo, run `docker compose down`.
